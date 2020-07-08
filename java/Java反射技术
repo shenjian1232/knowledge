@@ -1,0 +1,53 @@
+#java反射技术
+
+        
+这段代码是一段简易的通过反射技术去创建ReflectService对象，并且通过获取方法通过反射调用。反射调用的最大好处是我们可以配置性大大提高，就如同Spring IOC容器一样，我们可以给很多配置，设置参数，配置调用那个方法提供服务等，使得Spring能够顺利跑起来，这大大提高了Java的灵活性，对于反射笔者不再做详细的介绍，需要了解的读者可以参考其它书籍和文档。
+
+步骤：  
+1、通过反射技术创建对象  
+2、通过反射技术获取对象的方法  
+3、反射调用方法.
+```
+import java.lang.reflect.InvocationTargetException;
+ 
+import java.lang.reflect.Method;
+ 
+public class ReflectService {
+ 
+    /**
+     * 服务方法
+     * @param name -- 姓名
+     */
+ 
+    public void sayHello(String name) {
+ 
+        System.err.println("hello " + name);
+ 
+    }
+ 
+    
+ 
+    /**
+     * 测试入口.
+     * @param args
+     */
+ 
+    public static void main(String[] args) throws ClassNotFoundException, NoSuchMethodException, 
+        InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+ 
+        //通过反射创建ReflectService对象.
+ 
+        Object service = Class.forName("ReflectService").newInstance();
+ 
+        //获取服务方法——sayHello
+ 
+        Method method = service.getClass().getMethod("sayHello", String.class);
+ 
+        //反射调用方法.
+ 
+        method.invoke(service, "ykzhen2015");
+ 
+    }
+ 
+}
+```

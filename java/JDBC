@@ -1,0 +1,112 @@
+#JDBC
+采用JDBC访问数据库的基本步骤：  
+1.载入JDBC驱动程序  
+2.定义连接URL  
+3.建立连接  
+4.创立statement或者PreparedStatement对象  
+5.执行查询或更新  
+6.结果处理  
+7.关闭连接
+```
+Connection conn=null;
+//通过初始化驱动类com.mysql.jdbc.Driver，该类就在 mysql-connector-java-5.0.8-bin.jar中。
+//如果你使用的是oracle数据库那么该驱动类将不同。
+//初始化驱动类（载入JDBC驱动程序）
+Class.forName("com.mysql.jdbc.Driver");
+//定义连接URL
+String url="jdbc:mysql://127.0.0.1:3306/exam?characterEncoding=UTF-8";
+//连接一个数据库
+conn=DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/exam?characterEncoding=UTF-8","root", "admin");
+//创建Statement对象
+Statement s=conn.createStatement();
+//准备sql语句
+String sql="insert into t_courses values(null,"+"'数学')";
+//执行sql
+s.execute(sql);
+//结果处理
+。。。。。。
+//关闭连接				
+conn.close();
+```
+
+
+#JDBC连接池
+一、创建一个数据源类  
+二、在类中创建LinkedList集合创建连接池的容器--连接池   
+三、在数据源类的构造函数中创建连接池：  
+1、初始化连接数量  
+2、装载驱动对象   
+3、通过JDBC建立数据库连接  
+4、将连接加入连接池中  
+三、在数据源中创建取出连接池中一个连接的方法：  
+1、获取第一个连接给Connection，把剩下的连接返回给LinkedList集合  
+四、创建取出连接池中一个连接的方法
+
+创建一个数据源的的实例：
+当
+
+
+```
+package com.minsheng.reinsurance.reinsurance;
+
+import java.sql.*;
+import java.util.LinkedList;
+
+
+public class MyDataSource {
+    //LinkedList集合，存储连接的容器---连接池
+    private LinkedList<Connection> dataSources = new LinkedList();
+    //初始化连接数量
+    public MyDataSource() {
+        //一次性创建10个连接
+        for(int i = 0; i < 10; i++) {
+            try {
+                //1、装载驱动对象
+                Class.forName("com.mysql.jdbc.Driver");
+                //2、通过JDBC建立数据库连接
+                Connection con = DriverManager.getConnection(
+                        "jdbc:mysql://localhost:3306/reinsurance?useSSL=false&serverTimezone=GMT%2B8&zeroDateTimeBehavior=convertToNull", "root", "123456");
+                //3、将连接加入连接池中
+                dataSources.add(con);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public Connection getConnection() throws SQLException {
+        //取出连接池中一个连接
+        final Connection conn = dataSources.removeFirst(); // 获取第一个连接给Connection，把剩下的连接返回给LinkedList集合
+        System.out.println("执行数据库的操作时，连接池内剩余连接个数： "+dataSources.size());//输出集合里面剩下的连接的个数
+        return conn;
+    }
+
+    public void releaseConnection(Connection conn) {
+        //把连接返还给连接池
+        dataSources.add(conn);
+        System.out.println("数据库操作完成时，连接池剩余连接个数："+dataSources.size());//输出集合里面剩下的连接的个数
+    }
+    public static void main(String[] args) throws Exception{
+        //1、使用连接池建立数据库连接
+        MyDataSource myDataSource = new MyDataSource();
+        Connection conn =myDataSource.getConnection();
+        //2、创建状态
+        Statement state =conn.createStatement();
+        //3、查询数据库并返回结果
+        ResultSet result =state.executeQuery("select * from sys_user where id=10");
+        //4、输出查询结果
+        while(result.next()){
+            System.out.println(result.getString("name"));
+        }
+        //5、断开数据库连接
+        result.close();
+        state.close();
+//        Connection connection=myDataSource.getConnection();
+        //6、归还数据库连接给连接池
+        //myDataSource.releaseConnection(conn);
+        
+    }
+
+}
+
+```

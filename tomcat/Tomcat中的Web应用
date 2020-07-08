@@ -1,0 +1,131 @@
+#Tomcat中的Web应用
+Web应用就是具有特定目录结构的目录和文件。
+
+基于JAVA技术开发的Web应用中通常会包含以下的web对象：  
+1.静态文件对象：HTML页面，图片，普通文件  
+2.Servlet: 依据Servlet规范实现的java类，可以以编译后的class文件出现，也可以以包含class文件的jar包出现  
+3.JSP文件：符合JSP规范的动态页面
+
+　　Web应用就是文件系统中的一个目录，称为Web应用根目录，该目录包括：访问该Web应用所需要的资源，以及Web应用本身的配置文件和描述文件。不同的Web服务器，对在其上部署的Web应用的根目录结构有不同的要求。而在Tomcat下，Web应用有如下目录结构:  
+![](img/26095355-8cef8246a5504bf2bc8c3d811d162f2e.png)
+
+顶节点是Web应用根目录，所有静态文件对象可以按任意目录层次放置在Web应用根目录中，比如结构图中的Web.jsp可以直接隶属于根目录，也可以隶属于根目录中的某个文件夹下，而这些文件都可以根据其目录层次通过URL直接访问。s
+WEB-INF是一个特殊的子目录，它只能置于根目录之下，它 不会让客户端直接访问其中的文件，而是间接地支持Web应用的运行，比如提供Web应用需要访问的资源文件，放置Web应用的属性文件和配置文件。其主要包括lib目录，classes目录，Web.xml文件。
+
+lib目录：主要存放Web应用所要使用的库文件
+classes目录： 主要存放Web应用使用的class文件
+Web.xml: 其是Web应用描述符，用于设置Web应用特有的配置
+
+Web应用的上下文路径
+
+部署到Tomcat的Web应用可以有多个，该怎么区分他们呢？这时候就会用Tomcat以及相关的Host路径来定义Web应用特有的路径，以便于准确定位Web应用。每个Host中可以有多个Web应用，则需要每个Web应用的路径是唯一的，例如：在localhost中有2个Web应用，路径分别为app1和app2，则访问他们的URL就可以表示为：http://localhost:8080/app1, http://localhost:8080/app2
+
+反之，Tomcat也可以根据客户端请求的URL的前缀来将请求发送给相应的Web应用
+
+**注意：** Web应用上下文路径与根目录名称是两个不同概念，这两个值未必是一样的。
+
+
+#将Web应用部署到Tomcat中
+
+为什么要部署？将Web应用部署到Tomcat中，那么Tomcat就能找到相应的Web应用，当Tomcat启动时就会加载和初始化Web应用，而在Tomcat启动后，客户端就看可以使用相应的URL通过Tomcat访问到Web应用了。
+
+部署的方式有两种：  
+1）直接将Web应用结构目录添加到Tomcat的webapps目录  
+2）使用Context元素
+
+1.接将Web应用结构目录添加到Tomcat的webapps目录  
+
+在Tomcat目录结构中，有一个叫做webapps的文件夹，由之前所讲，它会存放Web应用，一个文件夹代表一个Web应用。而在Tomcat启动时，它会默认加载webapps文件夹下面的所有Web应用。  
+
+2.使用Context元素
+
+根据教程（二）中的Tomcat服务器架构图知道，Context表示Host中的一个Web应用，每个Web应用可以是一个war(Web Application Archive)文件或者文件系统中的一个文件夹。一个Host可以有多个web应用，且他们必须要有唯一的上下文路径来区分。如果某个Web应用的上下文路径字符串是空串，则该Web应用就成为其所在虚拟主机的默认Web应用，所有请求URL没有与Host中其他任何一个Web应用上下文路径匹配的客户请求都会被分发到该Web应用。
+
+Context元素属性列表如下：
+
+|   元素      | 属性           |Mandatory|	Description|
+| :--------  | :------------ | :------- | :----------------------------------------------------------------------------|
+|  Context	 |  docBase	     |     Y    |	表示Web应用的根路径。若为war文件，属性值为该文件的路劲，若为目录，则为Web应用根目录路径 |
+|            |    path       |     N	|   Web应用的上下文路径|
+| 	         |  reloadable   |	   N	|   true/false(Default)。表示是否允许Tomcat服务器监视Web应用中/WEB-INF/classes和/WEB-INF/lib目录的变化|
+| 	         |  workDir      |	   N	|   指定一个目录路径来作为该Web应用的临时工作目录。若未指定该属性，则会使用Tomcat下的work目录|
+| 	         |   unpackWAR	 |     N	|   true/false，如果设置成true则Tomcat在运行压缩的Web应用（war文件）会先将它解压缩|
+
+举例：<Context docBase="D:\\webAppBase\application" path ="/app1" workDir="D:\\WebAppBase\application\work">
+
+将Context元素配置到Tomcat服务器中有如下方法：
+
+**1）在server.xml中添加Context元素** - 添加到Host节点内部，作为Host的元素。优点：简单直观；缺点：如果有很多Web应用，要配置很多Context元素，这样会使server.xml很难阅读和维护
+
+**2）添加到${TOMCAT_HOME}\conf\context.xml文件中** - 该文件是用于配置所有Web应用的Context元素。优点：将Context元素从server.xml中独立出来；缺点：当应用多了则不易维护
+
+**3）为每个虚拟主机的所有Web应用使用一个独立的配置文件** - ${CATATINA_HOME}/conf/[enginename]/[hostname]/context.xml.default - 即在虚拟主机中建立该文件，然后添加Context元素
+
+**4）为每个Web应用使用独立的配置文件** - 在${CATATINA_HOME}/conf/[enginename]/[hostname]目录中可以通过使用xml文件来为每个Web应用定义Context，文件名为Web应用的上下文路径
+
+ 
+
+#二、配置Web应用
+
+每个Web应用都有一个对Web应用进行配置的web.xml（特有部署描述符），存在WEB-INF的文件夹中；而在Tomcat的conf文件夹中也有web.xml（通用部署描述符），用来设置通用的配置。当通用部署描述符和特有部署描述符有冲突时，特有部署描述符的配置项优先。
+
+##Web应用部署描述符
+
+根元素web-app，其可以包含若干个子元素，而每个子元素都对应于Web应用某个方面的配置，且他们的顺序是任意的。
+
+web-app根元素有如下属性：version, id, metadata-complete。比较常用的是version，表明Web描述文件兼容的最好版本。
+
+web-app根元素下最常用的子元素：
+
+**welcome-file-list: **定义一个welcome文件列表
+```
+<welcome-file-list>
+    <welcome-file>index.html</welcome-file>
+    <welcome-file>index.htm</welcome-file>
+    <welcome-file>index.jsp</welcome-file>
+</welcome-file-list>
+```
+
+welcome-file-list会定义目录的默认访问文件，当客户端请求的URL指向一个目录而非文件时，则就会访问默认访问文件，而这个list中定义的文件是有访问顺序的，按照显示顺序优先返回，若前面的文件不存在，则依次访问后面的文件。
+
+**servlet和servlet-mapping:** 这两个元素主要用于在Web应用中添加Servlet。servlet元素用于定义Servlet的名称，实现类等属性，servlet-mapping用于定义servlet的路径映射方式。
+```
+<servlet>
+    <servlet-name>jsp</servlet-name>
+    <servlet-class>org.apache.jasper.servlet.JspServlet</servlet-class>
+    <init-param>
+        <param-name>fork</param-name>
+        <param-value>false</param-value>
+    </init-param>
+    <!-- can have multiple init-param -->
+    <load-on-startup>3</load-on-startup>
+</servlet>
+
+<servlet-mapping>
+    <servlet-name>jsp</servlet-name>
+    <url-pattern>*.jsp</url-pattern>
+</servlet-mapping>
+<servlet-mapping>
+    <servlet-name>jsp</servlet-name>
+    <url-pattern>*.jspx</url-pattern>
+</servlet-mapping>
+```
+
+在上面的servlet元素中，其名字是jsp，所使用的java类为org.apache.jasper.servlet.JspServlet，其中的<init-param>元素为java类所要用到的参数；而<load-on-startup>元素中定义一个整数值，如果值为0或正整数，则表明该Servlet会在Tomcat服务器启动时必须被加载和初始化，若为负整数或该配置项不存在时Tomcat可以选择不在启动时加载和初始化Servlet。
+
+在<servlet-mapping>元素中定义servlet名字为jsp的路径映射方式 -- <url-pattern>，该元素定义了一个请求URL模板，请求URI与该模板匹配时请求将被分配到对于的Servlet。在该段xml代码中，定义了访问*.jsp和*.jspx的文件都将被分配到名字为jsp的Servlet进行处理。
+
+**filter和filter-mapping:** 这两个元素主要用于在Web应用中添加过滤器。filter元素用于定义过滤器的名称，实现类等属性，filter-mapping用于定义filter的路径映射方式。
+**mime-mapping:** 该元素定义在Web应用中如何根据文件名后缀映射出文件的mime类型
+```<mime-mapping>
+    <extension>htm</extension>
+    <mime-type>text/html</mime-type>
+</mime-mapping>
+Note: MIME是Multipurpose Internet Mail Extensions(多用途Internet邮件扩展)的简称，其被用于判断二进制文件的内容和打开方式。
+
+session-config: 用于配置session的一些参数，例如session的超时时间
+<session-config>
+    <session-timeout>30</session-timeout>
+</session-config>
+```
+总结： Tomcat中可以部署多个Web应用，而其通过应用的上下文路径来区分各个Web应用。部署Web应用可以通过添加Context元素。我们可以通过配置Tomcat中的web.xml或者Web应用自身的web.xml来对Web应用进行配置。

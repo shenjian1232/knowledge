@@ -1,0 +1,155 @@
+#Web开发
+Spring Boot Web 开发非常的简单，其中包括常用的json输出、filter、property、log等。
+#jspn接口开发
+在以前使用Spring开发项目，需要提供json接口时需要做的配置：
+>1.添加jackjson等相关jar包  
+ 2.配置Spring Controller 扫描  
+ 3.对接的方法添加@ResponseBody
+ 
+ 就这样我们会经常由于配置错误，导致406错误等等，Spring Boot只需要类添加 **@RestController** 即可，默认类中的方法都会以 json 的格式返回
+ ```
+@RestController
+public class HelloController {
+    @RequestMapping("/getUser")
+    public User getUser() {
+    	User user=new User();
+    	user.setUserName("小明");
+    	user.setPassWord("xxxx");
+        return user;
+    }
+}
+```
+如果需要使用页面开发只要使用**@Controller**注解即可，下面会结合模板来说明
+#自定义 Filter
+我们常常在项目中会使用 filters 用于录调用日志、排除有 XSS 威胁的字符、执行权限验证等等。Spring Boot 自动添加了 OrderedCharacterEncodingFilter 和 HiddenHttpMethodFilter，并且我们可以自定义 Filter。
+两个步骤：
+>1.实现 Filter 接口，实现 Filter 方法  
+>2.添加**@Configuration** 注解，将自定义Filter加入过滤链
+```
+package com.minsheng.reinsurance.filter;
+
+import org.apache.log4j.Logger;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.session.Session;
+import org.apache.shiro.subject.Subject;
+import org.springframework.stereotype.Component;
+
+import javax.servlet.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Properties;
+import java.util.Set;
+
+/**
+ *
+ */
+@Component
+public class LoginFilter implements Filter {
+
+    private static final Logger LOG =Logger.getLogger(LoginFilter.class);
+
+    //不需要拦截的路径   正则表达式
+//    private static final String NO_INTERCEPTOR_PATH = ".*/css/|/js/|/login/.*";
+    Properties prop = new Properties();
+    @Override
+    public void init(FilterConfig filterConfig) throws ServletException {
+        try {
+            prop.load(this.getClass().getResourceAsStream("/filterexcludeURL.properties"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+
+        boolean flag = true; //校验标志
+
+        HttpServletRequest request = (HttpServletRequest)servletRequest;
+        HttpServletResponse response = (HttpServletResponse)servletResponse;
+        String requestPath = request.getRequestURI();
+
+        LOG.info("======开始过滤=====");
+        LOG.info("请求地址为"+requestPath);
+
+        boolean excludeUrl = false;
+        Set<Object> keys = prop.keySet();//返回属性key的集合
+        for (Object key : keys) {
+            if(requestPath.contains((String)prop.get(key))){
+
+                excludeUrl = true;
+            }
+        }
+//        不对匹配的路径进行拦截
+        if(excludeUrl){
+            LOG.info("该请求地址无需拦截");
+        }else{
+            Subject currentUser = SecurityUtils.getSubject();
+            if (null != currentUser) {
+                Session session = currentUser.getSession();
+                if (session.getAttribute("userId") == null) {
+                    LOG.info("用户没有登陆！！！！");
+                    response.sendRedirect("/api/login");
+                    flag = false;
+                }else{
+                    LOG.info("用户已经登陆，放行");
+                }
+            }else{
+                LOG.info("currentUser为空！！");
+            }
+        }
+
+        if(flag){
+// 放行
+            filterChain.doFilter(request,response);
+        }
+
+
+    }
+
+    @Override
+    public void destroy() {
+
+    }
+}
+
+```
+#自定义Property
+
+在 Web 开发的过程中，自定义一些配置文件.
+**配置在 application.properties 中**
+```
+com.neo.title=纯洁的微笑
+com.neo.description=分享生活和技术
+```
+自定义配置类
+```
+@Component
+public class NeoProperties {
+	@Value("${com.neo.title}")
+	private String title;
+	@Value("${com.neo.description}")
+	private String description;
+
+	//省略getter settet方法
+
+	}
+```
+#log配置
+**待完善。。。。。。。**
+
+
+#数据库操作
+**待完善。。。。。。。**
+
+
+#Thymeleaf模板
+**待完善。。。。。。。**
+
+#Gradle构建工具
+**待完善。。。。。。。**
+
+
+#WebJars
+**待完善。。。。。。。**

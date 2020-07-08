@@ -1,0 +1,86 @@
+#gitlab的持续集成是什么?
+
+   软件集成是软件开发过程中的一个环节，这个环节的工作一般会包括以下流程：
+ 合并代码---->安装依赖---->编译---->测试---->发布。
+ 软件集成的工作一般会比较细碎繁琐，为了不影响开发效率，
+ 以前软件集成这个环节一般不会经常进行或者只会等到项目后期再进行。
+ 但是有些问题，如果等到后期才发现，解决问题的代价很大，有可能导致项目延期或者失败。
+ 因此，为了尽早发现软件集成错误，鼓励团队成员应该经常集成他们的工作，通常每个成员每天应该至少集成一次。
+ 这就是所说的持续集成。所以说，持续集成是一种软件开发实践。
+    
+    软件集成的工作细碎繁琐，以前是由人工完成的。
+ 但是现在鼓励持续集成，那岂不是要累死人，还影响开发效率。
+ 所以，应该考虑将软件集成这个工作自动化，这就出现了所谓的持续集成系统。
+
+#GitLab-CI
+  
+  GitLab-CI就是一套配合GitLab使用的持续集成系统（当然，还有其它的持续集成系统，同样可以配合GitLab使用，比如Jenkins）。
+而且GitLab8.0以后的版本是默认集成了GitLab-CI并且默认启用的。
+
+3.GitLab-Runner
+
+那GitLab-Runner又是什么东东呢？与GitLab-CI有什么关系呢？
+
+  GitLab-Runner是配合GitLab-CI进行使用的。一般地，GitLab里面的每一个工程都会定义一个属于这个工程的软件集成脚本，用来自动化地完成一些软件集成工作。当这个工程的仓库代码发生变动时，比如有人push了代码，GitLab就会将这个变动通知GitLab-CI。这时GitLab-CI会找出与这个工程相关联的Runner，并通知这些Runner把代码更新到本地并执行预定义好的执行脚本。
+
+  所以，GitLab-Runner就是一个用来执行软件集成脚本的东西。你可以想象一下：Runner就像一个个的工人，而GitLab-CI就是这些工人的一个管理中心，所有工人都要在GitLab-CI里面登记注册，并且表明自己是为哪个工程服务的。当相应的工程发生变化时，GitLab-CI就会通知相应的工人执行软件集成脚本。如下图所示：
+ 
+  ![]()
+
+**Runer类型**
+
+GitLab-Runner可以分类两种类型：Shared Runner（共享型）和Specific Runner（指定型）。
+Shared Runner：这种Runner（工人）是所有工程都能够用的。只有系统管理员能够创建Shared Runner。
+Specific Runner：这种Runner（工人）只能为指定的工程服务。拥有该工程访问权限的人都能够为该工程创建Shared Runner。
+
+
+
+#Gitlab-Runner的安装与使用
+
+```
+添加repository
+sudo curl --output /usr/local/bin/gitlab-runner https://gitlab-runner-downloads.s3.amazonaws.com/latest/binaries/gitlab-runner-darwin-amd64
+安装gitlab-ci-multi-runner
+curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-ci-multi-runner/script.rpm.sh | sudo bash
+register runner
+gitlab-ci-multi-runner register
+
+编辑配置信息
+Please enter the gitlab-ci coordinator URL (e.g. https://gitlab.com )
+输入自己gitlab的地址，不需要具体到项目地址
+Please enter the gitlab-ci token for this runner
+输入token，可在gitlab/setting/ci中查看，复制过来即可
+Please enter the gitlab-ci description for this runner
+runner 描述
+Please enter the gitlab-ci tags for this runner (comma separated):
+输入标签，这个会在后续ci的配置中进行对应
+Enter the Runner executor:
+输入要运行的环境，一般ssh即可
+```
+这样会在gitlab的页面看见配置信息。
+
+![图片]()
+
+#gitlab-ci.yml
+  
+  有个执行脚本的运行软件gitlab-runner了。接下来编辑需要执行的脚本。
+  
+  ![]()
+
+  ![]()
+
+#当开发人员git push后，会执行编辑好的脚本
+  如图：
+  ![]()
+  ![]()
+  
+  可以看到执行脚本的状态和执行的结果。
+  ==
+  这样就能实现持续集成和发现集成中发现的问题。
+
+
+
+
+
+
+

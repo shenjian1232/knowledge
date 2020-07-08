@@ -1,0 +1,83 @@
+#钩子的作用
+git hooks可以实现策略强制执行、确保一致性、环境控制、部署任务处理等多种功能。
+
+1.客户端的hook：此类hook在提交者（committer）的计算机上被调用执行。此类hook又分为如下几类：
+
+  1. 代码提交相关的工作流hook：提交类hook作用在代码提交的动作前后，通常用于运行完整性检查、提交信息生成、信息内容验证等功能，也可以用来发送通知。
+  2. Email相关工作流hook：Email类hook主要用于使用Email提交的代码补丁。像是Linux内核这样的项目是采用Email进行补丁提交的，就可以使用此类hook。工作方式和提交类hook类似，而且项目维护者可以用此类hook直接完成打补丁的动作。
+  3. 其他类：包括代码合并、签出（check out）、rebase、重写（rewrite）、以及软件仓库的清理等工作。
+
+2.服务器端hook：此类hook作用在服务器端，一般用于接收推送，部署在项目的git仓库主干（main）所在的服务器上。Chacon将服务器端hook分为两类：
+
+  1.   接受触发类：在服务器接收到一个推送之前或之后执行动作，前触发常用于检查，后触发常用于部署。
+  2.   更新：类似于前触发，不过更新类hook是以分支（branch）作为作用对象，在每一个分支更新通过之前执行代码。
+
+hooks和CI异同:
+
+相同点：
+可以实现自动部署和checkstyle功能。
+都是执行脚本。
+
+不同点：
+CI不需要gitlab管理员权限，hooks需要。
+hooks脚本是用python或者Ruby编辑，CI执行CI.yml然后执行服务器中的某个命令或脚本。
+#钩子可以为某个存储库创建自定义挂钩也可以创建所有存储设置全局挂钩
+1.为存储库创建自定义Git挂钩
+   1. 选择一个需要自定义Git钩子的项目。
+   2. 在GitLab服务器上，导航到项目的存储库目录。对于从源安装，通常是路径 /home/git/repositories/<group>/<project>.git。对于Omnibus，通常会安装路径/var/opt/gitlab/git-data/repositories/<group>/<project>.git。
+   3. 在此位置创建一个名为的新目录custom_hooks。
+   4. 在新custom_hooks目录中，创建一个名称与钩子类型匹配的文件。对于预接收挂钩，文件名应该pre-receive 没有扩展名。
+   5. 使钩子文件可执行，并确保它由git拥有。
+   6. 编写代码以使Git钩子函数按预期方式运行。
+   7. 钩子可以是任何语言。确保顶部的“shebang”正确反映语言类型。例如，如果脚本在Ruby中，则可能是shebang #!/usr/bin/env ruby。
+
+2.为所有存储库设置全局Git挂钩
+
+   1. 在GitLab服务器上，导航到配置的自定义挂钩目录。默认位于gitlab-shell目录中。hook通常是从源路径安装的gitlab-shell 目录 /home/git/gitlab-shell/hooks。对于Omnibus，通常会安装路径 /opt/gitlab/embedded/service/gitlab-shell/hooks。要查看全局自定义挂钩的其他目录，请custom_hooks_dir在gitlab-shell配置中进行设置。对于Omnibus安装，可以设置gitlab.rb; 在源安装中，可以设置gitlab-shell/config.yml。
+   2. 在此位置创建一个新目录。根据你的钩子，这将是A pre-receive.d，post-receive.d或update.d目录。
+   3. 在这个新目录中，添加你的钩子。钩子可以是任何语言。确保顶部的“shebang”正确反映语言类型。例如，如果脚本在Ruby中，则可能是shebang #!/usr/bin/env ruby。
+   4. 使钩子文件可执行，并确保它由Git拥有。
+
+3.链式挂钩支撑
+  
+  挂钩也可以是全局的，也可以按项目目录设置，并支持挂钩的链式执行。
+
+   注意： <hook_name>.d将需要要么pre-receive.d， post-receive.d或update.d正常工作。任何其他名称都将被忽略。
+   ==
+   注意：.d目录中的 文件需要是可执行的，并且与备份文件模式（*~）不匹配。
+   ==
+按以下顺序搜索并执行钩子：
+1. gitlab-shell/hooks Gitaly已知的目录
+2. <project>.git/hooks/<hook_name>- git自己执行，这是符号链接gitlab-shell/hooks/<hook_name>
+3. <project>.git/custom_hooks/<hook_name> - 每个项目挂钩（这已经是现有的行为）
+4. <project>.git/custom_hooks/<hook_name>.d/* - 每个项目挂钩
+5. <project>.git/hooks/<hook_name>.d/*OR <custom_hooks_dir>/<hook_name.d>/*- 全局钩子：所有可执行文件（减去编辑器备份文件）
+
+
+#示例自定义错误消息
+```
+#!/bin/sh
+echo "GL-HOOK-ERR: My custom error message.";
+exit 1
+```
+
+#代码检查举例说明：
+实现在git push的时候，如果检查发现提交的代码不符合规范，那么就无法提交至gitlab服务器。
+##创建custom_hook文件
+
+##编写python代码实现代码规范检查
+
+##当用户执行push时发现代码不规范的错误
+
+
+
+
+
+
+
+
+
+
+
+
+

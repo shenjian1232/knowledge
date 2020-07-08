@@ -1,0 +1,31 @@
+
+#tomcat交互图
+![](img/20180518194018254.png)
+
+#tomcat服务器结构图
+![](img/25223758-264b5e3be3014658a7889442490a99e0.png)
+
+Tomcat服务器中可以配置多个Service，每个Service可以包含多个Connector和一个Engine。
+
+每个Connector是负责与外界交流的模块，负责在指定的服务器端口上监听来自客户端的请求，并将请求交给处理引擎，待处理引擎处理后再将结果返回给客户端。Connector要支持不同的传输协议。
+
+一个Service只有一个Engine，来自各个Connector的客户端请求。Engine上可以有多个Host(Host指的是虚拟主机，即在物理服务器上配置的多个域名)。每个Host上又可以部署一个或多个Web应用，即结构图中的Context，而每个应用中又可以配置多个Servlet来处理相应的请求。
+
+Tomcat通过分级的结构将其提供的多服务，多协议，多主机进行层层分解，最终都归结到一个一个的Servlet来执行具体的任务，这也是Tomcat被称为Servlet容器的原因
+
+#tomcat基础配置-server.xml配置文件
+Tomcat有层级结构，也体现在server.xml配置文件中，它是用于配置Tomcat服务器的最主要的配置文件，默认的配置文件有如下元素：
+
+![](img/25232530-0007942a02e740b38ecb683f7f1e91dd.png)
+
+黑体部分位server.xml中的元素，红色部分为元素的属性。
+
+Connector可以有两种，一种是HTTP Connector，使得Tomcat可以通过http协议通信，一种是AJP Connetor，表示使用AJP协议通信，用于Tomcat与Apache服务器通信。他们都是根据protocol属性值进行区分，默认是HTTP Connector。
+
+Tomcat其他配置文件
+
+**web.xml**: Tomcat中每个Web应用都拥有一个对Web应用进行配置的web.xml文件
+
+**tomcat-user.xml**: 给文件对登陆Tomcat后台管理的用户做定义，包括角色和用户名/密码
+
+**logging.properties**: Tomcat服务器日志功能属性文件，定义了每一种日志的级别，存放目录，日志文件名前缀，使用的日志处理器等属性

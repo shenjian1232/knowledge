@@ -1,0 +1,19 @@
+#什么是tomcat
+Tomcat是Servlet和JSP容器，实现了JSP规范的servlet容器。它在servlet生命周期内包容、装载、运行和停止servlet容器。
+#Servlet容器的三种工作模式
+1.独立的Servlet容器  
+　　Servlet容器与基于JAVA技术的Web服务器集成，**Servlet容器与Web服务器在同一个JVM中运行**，作为独立的Web服务器运行。外部请求到达Servlet容器，Servlet容器通过解析请求消息将请求分发给目的Servlet，运行Servlet获取响应，并将响应以特定的格式返回给客户端。
+ （外部请求---》servlet容器（web服务器）---》Servlet(目的Servlet)---》运行Servlet---》返回给客户端）  
+ 
+2.进程内的Servlet容器  
+　　Servlet容器与基于非Java技术的Web服务器一起使用，通过Web服务器插件将Servlet容器集成到Web服务器中。通过Web服务器将Servlet容器集成到Web服务器中。Web服务器插件将在Web服务器内部地址空间打开一个JVM，使得Servlet可以在该JVM中加载并运行Servlet.如果有客户端调用Servlet请求的到来，Web服务器插件会通过JNI接口将请求传递给Servlet容器，然后由Servlet容器处理该请求。  
+（外部请求---》非java技术的Web服务器---》通过JNI接口---》传递至Servlet容器---》处理请求）  
+
+3.进程内的Servlet容器  
+　　该模式也是通过服务器插件的形式将Servlet容器与Web服务器联系起来。在该模式下，Web服务器将Servlet容器运行在服务器外部的JVM中。Web服务器插件与Servlet容器使用IPC机制进行通信。当访问Servlet的请求到达Web服务器时，Web服务器插件通过使用IPC消息传递给Servlet容器。模式2和模式3的区别就是Servlet容器与Web服务器的耦合程度以及Web服务器插件与Servlet容器的通信方式不同。
+    （外部请求---》Web服务器--通过使用IPC机制通信消息传递--》Servlet容器---》处理请求）
+    
+      
+
+ 
+ 
